@@ -6,7 +6,7 @@ export interface DiagnosticResult {
   trackedAt: string
   tracker: {
     found: boolean
-    via: 'direct' | 'gtm' | 'unknown'
+    via: ('direct' | 'gtm')[]
     campaignId: string | null
     phoneNumbers: string[]
     lineFriendAdd: {
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     trackedAt: new Date().toISOString(),
     tracker: {
       found: false,
-      via: 'unknown',
+      via: [],
       campaignId: null,
       phoneNumbers: [],
       lineFriendAdd: {
@@ -121,16 +121,11 @@ export async function POST(req: NextRequest) {
     if (trackerScript) {
       result.tracker.found = true
 
-      // JS実行前の生HTMLで判定：直接書かれていれば direct、なければ GTM経由
+      // JS実行前の生HTMLで判定：両方検出した場合は両方追加
       const directPattern = /assets\.omni-databank\.com\/tracker\.js/
       const gtmPattern = /googletagmanager\.com\/gtm\.js/
-      if (directPattern.test(rawHtml)) {
-        result.tracker.via = 'direct'
-      } else if (gtmPattern.test(rawHtml)) {
-        result.tracker.via = 'gtm'
-      } else {
-        result.tracker.via = 'unknown'
-      }
+      if (directPattern.test(rawHtml)) result.tracker.via.push('direct')
+      if (gtmPattern.test(rawHtml)) result.tracker.via.push('gtm')
     }
 
     // --- odb() 呼び出しの解析 ---

@@ -23,7 +23,7 @@ function buildMarkdown(result: DiagnosticResult): string {
   lines.push(`|------|-----|`)
   lines.push(`| ステータス | ${tracker.found ? '✅ 検出' : '❌ 未検出'} |`)
   if (tracker.found) {
-    const via = tracker.via === 'gtm' ? 'GTM経由' : tracker.via === 'direct' ? '直接設置' : '不明'
+    const via = tracker.via.length === 0 ? '不明' : tracker.via.map((v) => v === 'gtm' ? 'GTM経由' : '直接設置').join(' + ')
     lines.push(`| 設置方法 | ${via} |`)
     lines.push(`| キャンペーンID | ${tracker.campaignId ?? '⚠ 未設定'} |`)
     lines.push(`| 置換対象電話番号 | ${tracker.phoneNumbers.length > 0 ? tracker.phoneNumbers.join(', ') : '⚠ 未設定'} |`)
@@ -181,11 +181,11 @@ export default function Home() {
                 <Row
                   label="設置方法"
                   value={
-                    result.tracker.via === 'gtm'
-                      ? '📦 GTM経由'
-                      : result.tracker.via === 'direct'
-                      ? '📄 直接設置'
-                      : '不明'
+                    result.tracker.via.length === 0
+                      ? '不明'
+                      : result.tracker.via
+                          .map((v) => v === 'gtm' ? '📦 GTM経由' : '📄 直接設置')
+                          .join(' + ')
                   }
                 />
                 <Row

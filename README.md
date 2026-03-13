@@ -24,7 +24,7 @@ CSへの「タグが正しく設置されているか確認してほしい」と
 | 対象セレクタ | 計測タグで指定されているCSSセレクタ（例: `.lineAddFriend`） |
 | 要素の存在確認 | 指定セレクタに対応するHTML要素がページ上に存在するか |
 
-> 要素が存在しない場合、診断ログに `LineAddFriendElement not found. (selector: .lineAddFriend)` が表示されます。
+> 要素が存在しない場合、エラーログに `LineAddFriendElement not found. (selector: .lineAddFriend)` が表示されます。
 
 ### Google Tag Manager
 

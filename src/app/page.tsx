@@ -9,7 +9,7 @@ type AuthStatus = 'checking' | 'login' | 'authenticated'
 
 function buildMarkdown(result: DiagnosticResult): string {
   const lines: string[] = []
-  const { tracker, gtm, ga4, errors, consoleErrors } = result
+  const { tracker, gtm, ga4, cvTags, errors, consoleErrors } = result
 
   lines.push(`# 計測タグChecker 診断レポート`)
   lines.push(``)
@@ -51,6 +51,22 @@ function buildMarkdown(result: DiagnosticResult): string {
   lines.push(`| ステータス | ${ga4.found ? '✅ 検出' : '— 未検出'} |`)
   if (ga4.found) lines.push(`| 測定ID | ${ga4.ids.join(', ')} |`)
   lines.push(``)
+
+  if (cvTags.google.found || cvTags.yahoo.found) {
+    lines.push(`## CV送信タグ（Google / Yahoo!）`)
+    lines.push(``)
+    lines.push(`| 項目 | 値 |`)
+    lines.push(`|------|-----|`)
+    if (cvTags.google.found) {
+      lines.push(`| Google CV送信タグ | ✅ 検出 |`)
+      lines.push(`| 引数のtel:有無 | ${cvTags.google.hasTelInArgs ? '❌ tel: あり（要修正）' : '✅ 問題なし'} |`)
+    }
+    if (cvTags.yahoo.found) {
+      lines.push(`| Yahoo! CV送信タグ | ✅ 検出 |`)
+      lines.push(`| 引数のtel:有無 | ${cvTags.yahoo.hasTelInArgs ? '❌ tel: あり（要修正）' : '✅ 問題なし'} |`)
+    }
+    lines.push(``)
+  }
 
   if (consoleErrors.length > 0) {
     lines.push(`## コンソールエラーログ`)
@@ -273,6 +289,51 @@ export default function Home() {
             <Row label="ステータス" value={result.ga4.found ? '✅ 検出' : '— 未検出'} highlight={result.ga4.found} />
             {result.ga4.found && <Row label="測定ID" value={result.ga4.ids.join(', ')} mono />}
           </Section>
+
+          {(result.cvTags.google.found || result.cvTags.yahoo.found) && (() => {
+            const g = result.cvTags.google
+            const y = result.cvTags.yahoo
+            const hasIssue = g.hasTelInArgs || y.hasTelInArgs
+            return (
+              <Section title="CV送信タグ（Google / Yahoo!）" status={hasIssue ? 'ng' : 'ok'}>
+                {g.found && (
+                  <>
+                    <Row label="Google CV送信タグ" value="✅ 検出" highlight />
+                    <Row
+                      label="引数のtel:有無"
+                      value={g.hasTelInArgs ? '❌ tel: あり（要修正）' : '✅ 問題なし'}
+                      error={g.hasTelInArgs}
+                      highlight={!g.hasTelInArgs}
+                    />
+                    {g.hasTelInArgs && g.occurrences.map((o, i) => (
+                      <Row key={i} label={`該当箇所[${i + 1}]`} value={o} warn mono />
+                    ))}
+                  </>
+                )}
+                {y.found && (
+                  <>
+                    <Row label="Yahoo! CV送信タグ" value="✅ 検出" highlight />
+                    <Row
+                      label="引数のtel:有無"
+                      value={y.hasTelInArgs ? '❌ tel: あり（要修正）' : '✅ 問題なし'}
+                      error={y.hasTelInArgs}
+                      highlight={!y.hasTelInArgs}
+                    />
+                    {y.hasTelInArgs && y.occurrences.map((o, i) => (
+                      <Row key={i} label={`該当箇所[${i + 1}]`} value={o} warn mono />
+                    ))}
+                  </>
+                )}
+                {hasIssue && (
+                  <Row
+                    label="修正方法"
+                    value={'goog_report_conversion(undefined) / yahoo_report_conversion(undefined) に変更してください'}
+                    warn
+                  />
+                )}
+              </Section>
+            )
+          })()}
 
           {result.consoleErrors.length > 0 && (
             <Section title="コンソールエラーログ" status="warn">

@@ -23,11 +23,21 @@ export interface DiagnosticResult {
     found: boolean
     ids: string[]
   }
+  cvTags: {
+    google: { found: boolean; hasTelInArgs: boolean; occurrences: string[] }
+    yahoo: { found: boolean; hasTelInArgs: boolean; occurrences: string[] }
+  }
   consoleErrors: string[]
   errors: string[]
 }
 
 export async function POST(req: NextRequest) {
+  // 認証チェック
+  const token = req.cookies.get('cdb_token')?.value
+  if (!token) {
+    return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
+  }
+
   const { url } = await req.json()
 
   if (!url || !/^https?:\/\/.+/.test(url)) {
@@ -50,6 +60,10 @@ export async function POST(req: NextRequest) {
     },
     gtm: { found: false, ids: [] },
     ga4: { found: false, ids: [] },
+    cvTags: {
+      google: { found: false, hasTelInArgs: false, occurrences: [] },
+      yahoo: { found: false, hasTelInArgs: false, occurrences: [] },
+    },
     consoleErrors: [],
     errors: [],
   }
@@ -178,6 +192,40 @@ export async function POST(req: NextRequest) {
       result.ga4.found = true
       result.ga4.ids = [...new Set(ga4Matches)]
     }
+
+    // --- CV送信タグの検出 ---
+    const cvTagResult = await page.evaluate(() => {
+      const allElements = Array.from(document.querySelectorAll('[onclick]'))
+      const google = { found: false, hasTelInArgs: false, occurrences: [] as string[] }
+      const yahoo = { found: false, hasTelInArgs: false, occurrences: [] as string[] }
+
+      for (const el of allElements) {
+        const onclick = el.getAttribute('onclick') || ''
+
+        // goog_report_conversion
+        const googMatch = onclick.match(/goog_report_conversion\s*\(([^)]*)\)/)
+        if (googMatch) {
+          google.found = true
+          const arg = googMatch[1].trim()
+          const hasTel = /tel:/i.test(arg)
+          if (hasTel) google.hasTelInArgs = true
+          google.occurrences.push(onclick.trim())
+        }
+
+        // yahoo_report_conversion
+        const yahooMatch = onclick.match(/yahoo_report_conversion\s*\(([^)]*)\)/)
+        if (yahooMatch) {
+          yahoo.found = true
+          const arg = yahooMatch[1].trim()
+          const hasTel = /tel:/i.test(arg)
+          if (hasTel) yahoo.hasTelInArgs = true
+          yahoo.occurrences.push(onclick.trim())
+        }
+      }
+
+      return { google, yahoo }
+    })
+    result.cvTags = cvTagResult
   } catch (err: any) {
     result.errors.push(err.message ?? '不明なエラーが発生しました')
   } finally {

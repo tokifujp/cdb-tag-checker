@@ -5,6 +5,10 @@ CSへの「タグが正しく設置されているか確認してほしい」と
 
 ![Tag Checker - Call Data Bank 計測タグ診断ツール](image.png)
 
+## 動くやつ👇
+
+https://tag.tokifuji.dev/
+
 ## 診断できること
 
 ### tracker.js（計測タグ）

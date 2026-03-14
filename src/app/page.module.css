@@ -515,3 +515,21 @@
   border-color: var(--err);
   color: var(--err);
 }
+
+/* GitHub icon */
+.githubLink {
+  display: flex;
+  align-items: center;
+  opacity: 0.45;
+  transition: opacity 0.2s;
+}
+
+.githubLink:hover {
+  opacity: 0.85;
+}
+
+.githubIcon {
+  width: 15px;
+  height: 15px;
+  fill: var(--text);
+}

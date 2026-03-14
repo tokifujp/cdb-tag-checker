@@ -23,6 +23,7 @@ function buildMarkdown(result: DiagnosticResult): string {
   lines.push(`|------|-----|`)
   lines.push(`| ステータス | ${tracker.found ? '✅ 検出' : '❌ 未検出'} |`)
   if (tracker.found) {
+    if (tracker.env) lines.push(`| 環境 | ${tracker.env} |`)
     const via = tracker.via.length === 0 ? '不明' : tracker.via.map((v) => v === 'gtm' ? 'GTM経由' : '直接設置').join(' + ')
     lines.push(`| 設置方法 | ${via} |`)
     lines.push(`| キャンペーンID | ${tracker.campaignId ?? '⚠ 未設定'} |`)
@@ -88,7 +89,7 @@ function buildMarkdown(result: DiagnosticResult): string {
 export default function Home() {
   const [authStatus, setAuthStatus] = useState<AuthStatus>('checking')
   const [userLabel, setUserLabel] = useState('')
-  const [sid, setSid] = useState('')
+  const [oem, setOem] = useState('cdb')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState('')
@@ -122,7 +123,7 @@ export default function Home() {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sid, email, password }),
+      body: JSON.stringify({ oem, email, password }),
     })
     const data = await res.json()
     setLoginLoading(false)
@@ -139,7 +140,7 @@ export default function Home() {
     setAuthStatus('login')
     setResult(null)
     setStatus('idle')
-    setSid('')
+    setOem('cdb')
     setEmail('')
     setPassword('')
   }
@@ -198,10 +199,14 @@ export default function Home() {
         </div>
 
         <div className={styles.loginBox}>
-          <p className={styles.loginTitle}>Call Data Bank アカウントでログイン</p>
+          <p className={styles.loginTitle}>アカウントでログイン</p>
           <div className={styles.loginField}>
-            <label className={styles.loginLabel}>サービスID (sid)</label>
-            <input className={styles.loginInput} type="text" value={sid} onChange={(e) => setSid(e.target.value)} placeholder="1" />
+            <label className={styles.loginLabel}>環境</label>
+            <select className={styles.loginInput} value={oem} onChange={(e) => setOem(e.target.value)}>
+              <option value="cdb">コールデータバンク</option>
+              <option value="adsip">AdSiP</option>
+              <option value="ivry">IVRy</option>
+            </select>
           </div>
           <div className={styles.loginField}>
             <label className={styles.loginLabel}>メールアドレス</label>
@@ -212,7 +217,7 @@ export default function Home() {
             <input className={styles.loginInput} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={(e) => e.key === 'Enter' && handleLogin()} />
           </div>
           {loginError && <p className={styles.errorMsg}>{loginError}</p>}
-          <button className={styles.loginBtn} onClick={handleLogin} disabled={loginLoading || !sid || !email || !password}>
+          <button className={styles.loginBtn} onClick={handleLogin} disabled={loginLoading || !oem || !email || !password}>
             {loginLoading ? <span className={styles.spinner} /> : 'ログイン'}
           </button>
         </div>
@@ -261,6 +266,7 @@ export default function Home() {
             <Row label="ステータス" value={result.tracker.found ? '✅ 検出' : '❌ 未検出'} highlight={result.tracker.found} error={!result.tracker.found} />
             {result.tracker.found && (
               <>
+                {result.tracker.env && <Row label="環境" value={result.tracker.env} highlight />}
                 <Row label="設置方法" value={result.tracker.via.length === 0 ? '不明' : result.tracker.via.map((v) => v === 'gtm' ? '📦 GTM経由' : '📄 直接設置').join(' + ')} />
                 <Row label="キャンペーンID" value={result.tracker.campaignId ?? '⚠ 未設定'} warn={!result.tracker.campaignId} mono />
                 <Row label="置換対象電話番号" value={result.tracker.phoneNumbers.length > 0 ? result.tracker.phoneNumbers.join(' / ') : '⚠ 未設定'} warn={result.tracker.phoneNumbers.length === 0} mono />

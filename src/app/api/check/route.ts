@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import puppeteer from 'puppeteer'
 
+// 環境定義（タグホストから自動判別）
+const TRACKER_HOSTS: { host: string; env: string }[] = [
+  { host: 'assets.omni-databank.com',    env: 'コールデータバンク' },
+  { host: 'assets.adsip.net',            env: 'AdSiP' },
+  { host: 'assets-ivry.omni-databank.com', env: 'IVRy' },
+]
+
 export interface DiagnosticResult {
   url: string
   trackedAt: string
   tracker: {
+    env: string | null
     found: boolean
     via: ('direct' | 'gtm')[]
     campaignId: string | null
@@ -48,6 +56,7 @@ export async function POST(req: NextRequest) {
     url,
     trackedAt: new Date().toISOString(),
     tracker: {
+      env: null,
       found: false,
       via: [],
       campaignId: null,
@@ -128,15 +137,22 @@ export async function POST(req: NextRequest) {
       result.errors.push('ページの読み込みがタイムアウトしました（部分的な結果です）')
     }
 
-    // --- tracker.js の検出 ---
-    const trackerUrl = 'assets.omni-databank.com/tracker.js'
-    const trackerScript = loadedScripts.find((s) => s.includes(trackerUrl))
+    // --- tracker.js の検出（全環境対応）---
+    let detectedHost: { host: string; env: string } | null = null
+    for (const h of TRACKER_HOSTS) {
+      if (loadedScripts.some((s) => s.includes(h.host))) {
+        detectedHost = h
+        break
+      }
+    }
 
-    if (trackerScript) {
+    if (detectedHost) {
       result.tracker.found = true
+      result.tracker.env = detectedHost.env
 
-      // JS実行前の生HTMLで判定：両方検出した場合は両方追加
-      const directPattern = /assets\.omni-databank\.com\/tracker\.js/
+      // JS実行前の生HTMLで判定
+      const escapedHost = detectedHost.host.replace(/\./g, '\\.')
+      const directPattern = new RegExp(escapedHost + '\/tracker\.js')
       const gtmPattern = /googletagmanager\.com\/gtm\.js/
       if (directPattern.test(rawHtml)) result.tracker.via.push('direct')
       if (gtmPattern.test(rawHtml)) result.tracker.via.push('gtm')

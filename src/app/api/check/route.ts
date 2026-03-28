@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import puppeteer from 'puppeteer'
+import { lookup } from 'dns/promises'
 
 // 環境定義（タグホストから自動判別）
 const TRACKER_HOSTS: { host: string; env: string }[] = [
@@ -39,6 +40,50 @@ export interface DiagnosticResult {
   errors: string[]
 }
 
+function isPrivateIP(ip: string): boolean {
+  const privateRanges = [
+    /^127\./,
+    /^10\./,
+    /^172\.(1[6-9]|2\d|3[01])\./,
+    /^192\.168\./,
+    /^169\.254\./,
+    /^::1$/,
+    /^fc00:/i,
+    /^fe80:/i,
+    /^0\.0\.0\.0$/,
+  ]
+  return privateRanges.some((r) => r.test(ip))
+}
+
+async function validateUrl(rawUrl: string): Promise<string | null> {
+  let parsed: URL
+  try {
+    parsed = new URL(rawUrl)
+  } catch {
+    return '有効なURLを入力してください'
+  }
+  if (!['http:', 'https:'].includes(parsed.protocol)) {
+    return '有効なURLを入力してください'
+  }
+  const hostname = parsed.hostname
+  // ローカルホスト名を直接ブロック
+  if (['localhost', '127.0.0.1', '::1', '0.0.0.0'].includes(hostname)) {
+    return 'このURLは診断できません'
+  }
+  // DNS解決してIPアドレスを確認
+  try {
+    const addresses = await lookup(hostname, { all: true })
+    for (const addr of addresses) {
+      if (isPrivateIP(addr.address)) {
+        return 'このURLは診断できません'
+      }
+    }
+  } catch {
+    return 'ホスト名を解決できませんでした'
+  }
+  return null
+}
+
 export async function POST(req: NextRequest) {
   // 認証チェック
   const token = req.cookies.get('cdb_token')?.value
@@ -48,8 +93,9 @@ export async function POST(req: NextRequest) {
 
   const { url } = await req.json()
 
-  if (!url || !/^https?:\/\/.+/.test(url)) {
-    return NextResponse.json({ error: '有効なURLを入力してください' }, { status: 400 })
+  const urlError = await validateUrl(url ?? '')
+  if (urlError) {
+    return NextResponse.json({ error: urlError }, { status: 400 })
   }
 
   const result: DiagnosticResult = {
@@ -243,7 +289,8 @@ export async function POST(req: NextRequest) {
     })
     result.cvTags = cvTagResult
   } catch (err: any) {
-    result.errors.push(err.message ?? '不明なエラーが発生しました')
+    console.error('[check] unexpected error:', err)
+    result.errors.push('診断中にエラーが発生しました')
   } finally {
     if (browser) await browser.close()
   }

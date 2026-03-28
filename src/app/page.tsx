@@ -201,20 +201,19 @@ export default function Home() {
         <div className={styles.loginBox}>
           <p className={styles.loginTitle}>アカウントでログイン</p>
           <div className={styles.loginField}>
-            <label className={styles.loginLabel}>環境</label>
-            <select className={styles.loginInput} value={oem} onChange={(e) => setOem(e.target.value)}>
+            <label className={styles.loginLabel} htmlFor="oem">環境</label>
+            <select className={styles.loginInput} id="oem" name="oem" autoComplete="off" value={oem} onChange={(e) => setOem(e.target.value)}>
               <option value="cdb">コールデータバンク</option>
               <option value="adsip">AdSiP</option>
-              <option value="ivry">IVRy</option>
             </select>
           </div>
           <div className={styles.loginField}>
-            <label className={styles.loginLabel}>メールアドレス</label>
-            <input className={styles.loginInput} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" onKeyDown={(e) => e.key === 'Enter' && handleLogin()} />
+            <label className={styles.loginLabel} htmlFor="email">メールアドレス</label>
+            <input className={styles.loginInput} id="email" name="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" onKeyDown={(e) => e.key === 'Enter' && handleLogin()} />
           </div>
           <div className={styles.loginField}>
-            <label className={styles.loginLabel}>パスワード</label>
-            <input className={styles.loginInput} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={(e) => e.key === 'Enter' && handleLogin()} />
+            <label className={styles.loginLabel} htmlFor="password">パスワード</label>
+            <input className={styles.loginInput} id="password" name="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={(e) => e.key === 'Enter' && handleLogin()} />
           </div>
           {loginError && <p className={styles.errorMsg}>{loginError}</p>}
           <button className={styles.loginBtn} onClick={handleLogin} disabled={loginLoading || !oem || !email || !password}>
@@ -246,6 +245,8 @@ export default function Home() {
           <span className={styles.inputPrefix}>URL</span>
           <input
             className={styles.input}
+            id="target-url"
+            name="target-url"
             type="url"
             placeholder="https://example.com/lp"
             value={url}

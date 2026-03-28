@@ -4,14 +4,12 @@ import { NextRequest, NextResponse } from 'next/server'
 const OEM_CONFIG: Record<string, { api: string; label: string }> = {
   cdb:   { api: 'https://api-2.omni-databank.com', label: 'コールデータバンク' },
   adsip: { api: 'https://api-2.omni-databank.com', label: 'AdSiP' },
-  ivry:  { api: 'https://api.callapps.net',         label: 'IVRy' },
 }
 
 // sid マッピング
 const OEM_SID: Record<string, string> = {
   cdb:   '1',
   adsip: '3',
-  ivry:  '1',
 }
 
 export async function POST(req: NextRequest) {
@@ -46,13 +44,15 @@ export async function POST(req: NextRequest) {
 
     const response = NextResponse.json({ ok: true, label: me?.label ?? '' })
 
-    response.cookies.set('cdb_token', accessToken, {
+    const cookieOptions = {
       httpOnly: true,
-      sameSite: 'lax',
+      sameSite: 'lax' as const,
       path: '/',
       maxAge: 60 * 30,
-      secure: process.env.NODE_ENV === 'production',
-    })
+      secure: req.headers.get('x-forwarded-proto') === 'https',
+    }
+    response.cookies.set('cdb_token', accessToken, cookieOptions)
+    response.cookies.set('cdb_oem', oem, cookieOptions)
 
     return response
   } catch {

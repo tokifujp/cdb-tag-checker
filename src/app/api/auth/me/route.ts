@@ -1,16 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const CDB_API = 'https://api-2.omni-databank.com'
+const OEM_API: Record<string, string> = {
+  cdb:   'https://api-2.omni-databank.com',
+  adsip: 'https://api-2.omni-databank.com',
+}
 
 export async function GET(req: NextRequest) {
   const token = req.cookies.get('cdb_token')?.value
+  const oem = req.cookies.get('cdb_oem')?.value ?? 'cdb'
 
   if (!token) {
     return NextResponse.json({ error: '未認証' }, { status: 401 })
   }
 
+  const api = OEM_API[oem] ?? OEM_API.cdb
+
   try {
-    const res = await fetch(`${CDB_API}/me`, {
+    const res = await fetch(`${api}/me`, {
       headers: { Authorization: `Bearer ${token}` },
     })
 

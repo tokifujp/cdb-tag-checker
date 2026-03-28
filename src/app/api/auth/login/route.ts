@@ -46,13 +46,15 @@ export async function POST(req: NextRequest) {
 
     const response = NextResponse.json({ ok: true, label: me?.label ?? '' })
 
-    response.cookies.set('cdb_token', accessToken, {
+    const cookieOptions = {
       httpOnly: true,
-      sameSite: 'lax',
+      sameSite: 'lax' as const,
       path: '/',
       maxAge: 60 * 30,
       secure: process.env.NODE_ENV === 'production',
-    })
+    }
+    response.cookies.set('cdb_token', accessToken, cookieOptions)
+    response.cookies.set('cdb_oem', oem, cookieOptions)
 
     return response
   } catch {

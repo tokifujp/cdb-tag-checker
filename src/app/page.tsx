@@ -205,7 +205,6 @@ export default function Home() {
             <select className={styles.loginInput} value={oem} onChange={(e) => setOem(e.target.value)}>
               <option value="cdb">コールデータバンク</option>
               <option value="adsip">AdSiP</option>
-              <option value="ivry">IVRy</option>
             </select>
           </div>
           <div className={styles.loginField}>

@@ -4,14 +4,12 @@ import { NextRequest, NextResponse } from 'next/server'
 const OEM_CONFIG: Record<string, { api: string; label: string }> = {
   cdb:   { api: 'https://api-2.omni-databank.com', label: 'コールデータバンク' },
   adsip: { api: 'https://api-2.omni-databank.com', label: 'AdSiP' },
-  ivry:  { api: 'https://api.callapps.net',         label: 'IVRy' },
 }
 
 // sid マッピング
 const OEM_SID: Record<string, string> = {
   cdb:   '1',
   adsip: '3',
-  ivry:  '1',
 }
 
 export async function POST(req: NextRequest) {

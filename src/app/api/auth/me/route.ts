@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from 'next/server'
 const OEM_API: Record<string, string> = {
   cdb:   'https://api-2.omni-databank.com',
   adsip: 'https://api-2.omni-databank.com',
-  ivry:  'https://api.callapps.net',
 }
 
 export async function GET(req: NextRequest) {

@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       sameSite: 'lax' as const,
       path: '/',
       maxAge: 60 * 30,
-      secure: process.env.NODE_ENV === 'production',
+      secure: req.headers.get('x-forwarded-proto') === 'https',
     }
     response.cookies.set('cdb_token', accessToken, cookieOptions)
     response.cookies.set('cdb_oem', oem, cookieOptions)

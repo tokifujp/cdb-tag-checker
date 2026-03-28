@@ -209,11 +209,11 @@ export default function Home() {
           </div>
           <div className={styles.loginField}>
             <label className={styles.loginLabel}>メールアドレス</label>
-            <input className={styles.loginInput} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" onKeyDown={(e) => e.key === 'Enter' && handleLogin()} />
+            <input className={styles.loginInput} id="email" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" onKeyDown={(e) => e.key === 'Enter' && handleLogin()} />
           </div>
           <div className={styles.loginField}>
             <label className={styles.loginLabel}>パスワード</label>
-            <input className={styles.loginInput} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={(e) => e.key === 'Enter' && handleLogin()} />
+            <input className={styles.loginInput} id="password" name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={(e) => e.key === 'Enter' && handleLogin()} />
           </div>
           {loginError && <p className={styles.errorMsg}>{loginError}</p>}
           <button className={styles.loginBtn} onClick={handleLogin} disabled={loginLoading || !oem || !email || !password}>
@@ -245,6 +245,8 @@ export default function Home() {
           <span className={styles.inputPrefix}>URL</span>
           <input
             className={styles.input}
+            id="target-url"
+            name="target-url"
             type="url"
             placeholder="https://example.com/lp"
             value={url}

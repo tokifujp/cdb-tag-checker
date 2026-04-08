@@ -1,0 +1,42 @@
+{
+  "sandbox": {
+    "enabled": true,
+    "network": {
+      "allowedDomains": []
+    },
+    "autoAllowBashIfSandboxed": false,
+    "allowUnsandboxedCommands": false,
+    "excludedCommands": ["git:*", "gh:*"]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Read|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/check-sensitive-paths.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": ["Read(./**)", "Edit(./**)", "Write(./**)", "Read(~/.gitconfig)"],
+    "deny": [
+      "Read(~/**)",
+      "Read(../)",
+      "Read(../**)",
+      "Edit(~/**)",
+      "Edit(../)",
+      "Edit(../**)",
+      "Edit(./.claude/settings.json)",
+      "Edit(./.claude/hooks/check-sensitive-paths.sh)",
+      "Write(~/**)",
+      "Write(../)",
+      "Write(../**)",
+      "Write(./.claude/settings.json)",
+      "Write(./.claude/hooks/check-sensitive-paths.sh)"
+    ]
+  }
+}
